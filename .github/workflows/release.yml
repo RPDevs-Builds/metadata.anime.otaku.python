@@ -4,7 +4,11 @@ on:
   push:
     tags:
       - 'v*'
+<<<<<<< HEAD
   workflow_dispatch: # Allows you to manually trigger this run from the Actions tab
+=======
+  workflow_dispatch:
+>>>>>>> cf430153fc4c24168b6396a4f51ab84dc6d23ba0
 
 permissions:
   contents: write
@@ -15,6 +19,8 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_PAT }} # Required to allow git push later
 
       - name: Extract Metadata
         id: extract_meta
@@ -23,7 +29,10 @@ jobs:
           VERSION=$(grep -oP '(?<=version=")[^"]*' addon.xml | head -n 1)
           ADDON_ID=$(grep -oP '(?<=id=")[^"]*' addon.xml | head -n 1)
           
+<<<<<<< HEAD
           # Sanity check to fail early if addon.xml parsing fails
+=======
+>>>>>>> cf430153fc4c24168b6396a4f51ab84dc6d23ba0
           if [ -z "$VERSION" ] || [ -z "$ADDON_ID" ]; then
             echo "Error: Failed to parse ADDON_ID or VERSION from addon.xml"
             exit 1
@@ -53,7 +62,23 @@ jobs:
       - name: Output to Local Zips Directory
         run: |
           mkdir -p zips
+<<<<<<< HEAD
           cp "$ZIP_NAME" "zips/metadata.anime.otaku.python_v0.9.0.zip"
+=======
+          # Copy dynamic zip to the explicitly requested static filename format
+          cp "$ZIP_NAME" "zips/metadata.anime.otaku.python_v0.9.0.zip"
+          # Optionally, also keep the dynamic version:
+          cp "$ZIP_NAME" "zips/"
+
+      - name: Commit and Push to Repo
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add zips/
+          git commit -m "Automated build: Add release zip for $VERSION" || echo "No changes to commit"
+          # Push to the branch that triggered the workflow (or main if dispatched)
+          git push origin HEAD:${{ github.ref_name }}
+>>>>>>> cf430153fc4c24168b6396a4f51ab84dc6d23ba0
 
       - name: Upload to Release
         uses: softprops/action-gh-release@v2
