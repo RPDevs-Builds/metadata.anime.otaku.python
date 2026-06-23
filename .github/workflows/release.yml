@@ -45,12 +45,12 @@ jobs:
       - name: Build Structure
         run: |
           mkdir -p "build/$ADDON_ID"
-          rsync -a --exclude='.git' --exclude='.github' --exclude='build' --exclude='zips' . "build/$ADDON_ID/"
+          rsync -a --exclude='.git' --exclude='.github' --exclude='build' --exclude='zips/' . "build/$ADDON_ID/"
 
       - name: Pack Archive
         run: |
           cd build
-          zip -r "../$ZIP_NAME" "$ADDON_ID"
+          zip -r "../$ZIP_NAME" "$ADDON_ID" -x "*/zips/*" -x "*/zips/"
           cd ..
 
       - name: Upload to Release
