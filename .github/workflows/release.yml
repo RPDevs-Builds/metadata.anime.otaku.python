@@ -1,5 +1,3 @@
-import os
-
 workflow_content = """name: Release Kodi Addon
 
 on:
@@ -53,8 +51,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GH_PAT }}
 """
 
-os.makedirs('.github/workflows', exist_ok=True)
 with open('.github/workflows/release.yml', 'w') as f:
     f.write(workflow_content)
     
-print("GitHub Action workflow created.")
+print("GitHub Action workflow updated.")
