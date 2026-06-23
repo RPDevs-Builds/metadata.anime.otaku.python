@@ -3,21 +3,55 @@ import requests
 from ..utils import logger
 
 # Note: You need a valid TVDB v4 API Token
-def get_series_data(tvdb_id):
-    logger(f"TVDB Request for {tvdb_id}")
-    # You would implement your requests.get() here using your TVDB API key
-    # returning a dict with keys: 'seriesName', 'overview', 'poster', 'fanart'
+def get_series_details_api(tvdb_id):
+    logger(f"TVDB Series Details Request for {tvdb_id}")
+    if not tvdb_id:
+        return {}
+        
     return {
         'seriesName': f"Show {tvdb_id}",
         'overview': "Anime metadata provided via Otaku mappings.",
         'poster': '',
-        'fanart': ''
+        'fanart': '',
+        'status': 'Continuing',
+        'firstAired': '2026-01-01'
     }
 
-def get_all_episodes(tvdb_id):
-    # Returns a list of dicts: {'id', 'title', 'season', 'episode'}
-    return [{'id': 1, 'title': 'Episode 1', 'season': 1, 'episode': 1}]
+def get_series_episodes_api(tvdb_id):
+    logger(f"TVDB Series Episodes Request for {tvdb_id}")
+    if not tvdb_id:
+        return []
+        
+    # Returns a list of dicts with expected keys
+    return [
+        {
+            'id': 1001,
+            'episodeName': 'Stub Episode 1',
+            'firstAired': '2026-01-01',
+            'airedSeason': 1,
+            'airedEpisodeNumber': 1
+        },
+        {
+            'id': 1002,
+            'episodeName': 'Stub Episode 2',
+            'firstAired': '2026-01-08',
+            'airedSeason': 1,
+            'airedEpisodeNumber': 2
+        }
+    ]
 
-def get_episode_data(ep_id):
-    # Returns episode metadata
-    return {'title': 'Episode 1', 'overview': 'Plot', 'firstAired': '2026-01-01', 'image': ''}
+def get_episode_details_api(ep_id):
+    logger(f"TVDB Episode Details Request for {ep_id}")
+    if not ep_id:
+        return {}
+        
+    return {
+        'id': ep_id,
+        'episodeName': f'Stub Episode {ep_id}',
+        'overview': 'This is a stub episode plot from TVDB.',
+        'firstAired': '2026-01-01',
+        'airedSeason': 1,
+        'airedEpisodeNumber': 1,
+        'image': ''
+    }
+
