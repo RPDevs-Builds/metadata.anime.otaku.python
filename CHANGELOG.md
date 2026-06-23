@@ -16,19 +16,19 @@ All notable changes to `metadata.anime.otaku.python` will be documented in this 
 
 ---
 
-## [1.1.0] - 2026-06-25
+## [1.1.0] - 2026-06-23
 
 ### Added
 - **Batch Context Menu Processing:** Context menu renamer now robustly detects and processes both single show directories and entire parent library directories containing multiple shows.
 - **Kodi Progress Bar Feedback:** Shows active folder scanning and mapping progress in the Kodi UI dialog.
 
-## [1.0.9] - 2026-06-25
+## [1.0.9] - 2026-06-23
 
 ### Fixed
 - Addressed strict Kodi ZIP archive validation bug (`itemsize: 11, first item is folder: false`) by compiling with Python `zipfile`.
 
 ---
-## [1.0.8] - 2026-06-25
+## [1.0.8] - 2026-06-23
 
 ### Added
 - **Kodi Context Menu Integration (`kodi.context.item`):** Added right-click support to rename Anime directories directly from the Kodi UI.
