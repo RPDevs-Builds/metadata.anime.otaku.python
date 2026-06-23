@@ -62,4 +62,4 @@ Based on the files, the `anime_mappings.db` database, and the bug fixes we've pu
 
 To improve overall scraper reliability:
 
-1. **Simkl Syncing**: Implement two-way sync for watch status and ratings with Simkl and MyAnimeList.
+1. ~~**Simkl Syncing**~~: (Delegated: 2-way watch sync and scrobbling should remain the responsibility of dedicated tracker plugins like the official Simkl or Trakt addons to maintain separation of concerns).
