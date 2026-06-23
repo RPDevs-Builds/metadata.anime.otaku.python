@@ -76,7 +76,8 @@ def get_series_details(handle, url):
         'studio': anilist_data.get('studio', ''),
         'status': tvdb_data.get('status', ''),
         'premiered': tvdb_data.get('firstAired', ''),
-        'mediatype': 'tvshow'
+        'mediatype': 'tvshow',
+        'episodeguide': urllib.parse.quote(url)
     })
     
     unique_ids = {}
@@ -86,7 +87,6 @@ def get_series_details(handle, url):
     if anilist_id: unique_ids['anilist'] = str(anilist_id)
         
     liz.setUniqueIDs(unique_ids, 'tvdb')
-    liz.setProperty('episodeguide', urllib.parse.quote(url))
     
     xbmcplugin.setResolvedUrl(handle=handle, succeeded=True, listitem=liz)
 
