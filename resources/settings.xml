@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<settings>
+    <section id="metadata.anime.otaku.python">
+        <category label="General">
+            <setting id="db_auto_update" type="boolean" label="Automatically update local mapping database">
+                <level>0</level>
+                <default>true</default>
+            </setting>
+            <setting id="db_update_interval" type="number" label="Database check interval (days)">
+                <level>0</level>
+                <default>7</default>
+                <dependencies>
+                    <dependency setting="db_auto_update" expression="true"/>
+                </dependencies>
+            </setting>
+        </category>
+        <category label="Providers">
+            <setting id="fallback_provider" type="string" label="Primary Episode/Text Metadata Provider">
+                <level>0</level>
+                <options>
+                    <option>TheTVDB</option>
+                    <option>TMDb</option>
+                </options>
+                <default>TheTVDB</default>
+            </setting>
+            <setting id="tmdb_api_key" type="string" label="Custom TMDb API Key (Optional)">
+                <level>1</level>
+                <default></default>
+                <dependencies>
+                    <dependency setting="fallback_provider" expression="TMDb"/>
+                </dependencies>
+            </setting>
+        </category>
+    </section>
+</settings>
