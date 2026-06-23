@@ -18,8 +18,9 @@ By adapting the clean architecture of Kodi's official `metadata.tvdb.com.python`
 * 📡 **Hybrid Processing Engine:** Discovers trending streams via AniList's ultra-fast GraphQL infrastructure and falls back gracefully to secondary data pools matching user settings.
 * 🔄 **Asynchronous Database Syncing:** Runs non-blocking background file checking intervals to safely sync down up-to-date community mapping updates from the upstream master repository without causing visual UI stuttering.
 * 🌍 **Localization Flexibility:** Features independent language preference controls (`English` or `Romaji`) for both the Indexer (Kodi GUI) and the included directory Renamer tool.
-* 🎬 **Dedicated Movie Scraper:** Added native support for anime movies, OVAs, ONAs, and special features via a dedicated scraper extension point (`scraper_movies.py`) that queries TMDb's movie endpoints.
+* 🎬 **Dedicated Movie Scraper:** Added native support for anime movies, OVAs, ONAs, and specials through TMDb's movie database and custom scraper hooks.
 * 🎨 **Premium Artwork Engine:** Native integration with Fanart.tv to pull high-quality transparent Clearlogos, Cleararts, Thumbs, and Fanart directly into Kodi 20+ skins.
+* 🗂️ **Advanced Library Renamer**: Context-menu tool that automatically restructures disorganized files into standard Kodi layouts (e.g. `Show Name (Year)/Season 01/S01E01 - Title.ext`).
 * 📦 **Settings Management:** Includes an advanced configuration dashboard featuring instant Backup and Restore capabilities for safe settings preservation.
 * 📝 **Custom Diagnostic Logging:** Features an advanced logging engine allowing you to define custom diagnostic log directories separate from the standard `kodi.log` for easy troubleshooting.
 * 🛠️ **Robust Exception Interception:** Features an isolated diagnostic execution ring (`debugger.py`) that captures raw application-level trace vectors, logging errors gracefully into the system storage layout.
@@ -45,6 +46,9 @@ The framework functions directly inside Kodi's native metadata extraction rings 
 ---
 
 ## 📅 Version History
+
+### v1.2.1 (2026-06-23)
+- **Advanced Renamer Options**: Added comprehensive folder, season, and episode formatting templates to the Otaku Renamer, supporting dynamically injected AniList `seasonYear` mappings and Kodi-standard `Show Name - Season 01 (Year)` structure parsing.
 
 ### v1.1.2 (2026-06-23)
 - **Fanart.tv Provider**: Added support for extracting and injecting premium Clearlogos, Cleararts, and Thumbs from Fanart.tv.
