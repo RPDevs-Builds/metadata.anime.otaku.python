@@ -2,9 +2,11 @@ name: Release Kodi Addon
 
 on:
   push:
+    branches:
+      - main
     tags:
       - 'v*'
-  workflow_dispatch: # Allows you to manually trigger this run from the Actions tab
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -21,11 +23,9 @@ jobs:
       - name: Extract Metadata
         id: extract_meta
         run: |
-          # Robust extraction of version and id from addon.xml
           VERSION=$(grep -oP '(?<=version=")[^"]*' addon.xml | head -n 1)
           ADDON_ID=$(grep -oP '(?<=id=")[^"]*' addon.xml | head -n 1)
           
-          # Sanity check to fail early if addon.xml parsing fails
           if [ -z "$VERSION" ] || [ -z "$ADDON_ID" ]; then
             echo "Error: Failed to parse ADDON_ID or VERSION from addon.xml"
             exit 1
@@ -34,12 +34,6 @@ jobs:
           echo "VERSION=$VERSION" >> $GITHUB_ENV
           echo "ADDON_ID=$ADDON_ID" >> $GITHUB_ENV
           echo "ZIP_NAME=${ADDON_ID}_v${VERSION}.zip" >> $GITHUB_ENV
-
-      - name: Debug Parsed Metadata
-        run: |
-          echo "Target Addon ID: $ADDON_ID"
-          echo "Target Version: $VERSION"
-          echo "Output Zip Name: $ZIP_NAME"
 
       - name: Build Structure
         run: |
@@ -55,7 +49,6 @@ jobs:
       - name: Output to Local Zips Directory
         run: |
           mkdir -p zips
-          # Keep the dynamic version
           cp "$ZIP_NAME" "zips/"
 
       - name: Commit and Push to Repo
@@ -64,7 +57,6 @@ jobs:
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git add zips/
           git commit -m "Automated build: Add release zip for $VERSION" || echo "No changes to commit"
-          # Push to the branch that triggered the workflow (or main if dispatched)
           git push origin HEAD:${{ github.ref_name }}
 
       - name: Upload to Release
@@ -75,5 +67,7 @@ jobs:
             ${{ env.ZIP_NAME }}
             zips/${{ env.ZIP_NAME }}
           draft: false
-          prerelease: false
+          prerelease: ${{ github.ref == 'refs/heads/main' }}
+          tag_name: ${{ github.ref == 'refs/heads/main' && 'dev' || github.ref_name }}
+          name: ${{ github.ref == 'refs/heads/main' && 'Development Build' || github.ref_name }}
           generate_release_notes: true
