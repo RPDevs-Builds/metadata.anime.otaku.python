@@ -376,10 +376,17 @@ def process_directory(directory, dry_run=True):
             
             # Apply season formatting (folder structures)
             season_folder_name = ""
-            if season_format == 'Season 1':
-                season_folder_name = f"Season {season}"
-            elif season_format == 'Season 01':
-                season_folder_name = f"Season {season:02d}"
+            if season_format != 'Flat (No Season Folders)':
+                sf = season_format
+                sf = sf.replace('Show Name', clean_anime_title)
+                sf = sf.replace('Season 01', f"Season {season:02d}")
+                sf = sf.replace('Season 1', f"Season {season}")
+                if '(Year)' in sf:
+                    if year:
+                        sf = sf.replace('(Year)', f"({year})")
+                    else:
+                        sf = sf.replace(' (Year)', '').replace('(Year)', '')
+                season_folder_name = sf.strip()
                 
             if season_folder_name:
                 target_dir = path / season_folder_name

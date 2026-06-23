@@ -21,7 +21,7 @@
         <setting id="renamer_title_language" type="labelenum" label="Preferred Title Language" values="English|Romaji" default="English" />
         <setting type="lsep" label="Directory Formatting" />
         <setting id="renamer_folder_format" type="labelenum" label="Show Directory Format" values="Do not rename|Show Name|Show Name (Year)" default="Do not rename" />
-        <setting id="renamer_season_format" type="labelenum" label="Season Sub-Directory Format" values="Flat (No Season Folders)|Season 1|Season 01" default="Flat (No Season Folders)" />
+        <setting id="renamer_season_format" type="labelenum" label="Season Sub-Directory Format" values="Flat (No Season Folders)|Season 1|Season 01|Show Name Season 1|Show Name Season 01|Season 1 (Year)|Season 01 (Year)|Show Name Season 1 (Year)|Show Name Season 01 (Year)" default="Flat (No Season Folders)" />
         <setting type="lsep" label="File Formatting" />
         <setting id="renamer_episode_format" type="labelenum" label="Episode Filename Format" values="Show Name S01E01 - Title|Show Name S01E01|S01E01 - Title|S01E01" default="Show Name S01E01 - Title" />
     </category>
