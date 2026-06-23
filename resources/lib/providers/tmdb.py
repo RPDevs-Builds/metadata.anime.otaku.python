@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-import requests
+import urllib.request
+import json
 from ..utils import logger
 
 DEFAULT_KEY = "af3a53eb387d57fc935e9128468b1899"
@@ -20,15 +21,12 @@ def get_api_key():
 def get_series_data(tmdb_id):
     """Fetches high-level series metrics including banners, plots, and rating scores."""
     logger(f"TMDb API: Fetching TV show details for ID {tmdb_id}")
-    params = {
-        "api_key": get_api_key(),
-        "language": "en-US"
-    }
+    api_key = get_api_key()
     try:
-        url = f"{BASE_URL}/tv/{tmdb_id}"
-        response = requests.get(url, params=params, timeout=10)
-        if response.status_code == 200:
-            data = response.json()
+        url = f"{BASE_URL}/tv/{tmdb_id}?api_key={api_key}&language=en-US"
+        req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+        with urllib.request.urlopen(req, timeout=10) as response:
+            data = json.loads(response.read().decode('utf-8'))
             genres = [g.get('name') for g in data.get('genres', [])]
             poster_path = data.get('poster_path', '')
             backdrop_path = data.get('backdrop_path', '')
@@ -49,31 +47,31 @@ def get_series_data(tmdb_id):
 def get_all_episodes(tmdb_id):
     """Iterates over available structural seasons to compile a master episode manifest."""
     logger(f"TMDb API: Fetching full season layout for ID {tmdb_id}")
-    params = {"api_key": get_api_key(), "language": "en-US"}
+    api_key = get_api_key()
     results = []
     try:
-        # First query the main show endpoint to learn how many seasons it actually has
-        url = f"{BASE_URL}/tv/{tmdb_id}"
-        response = requests.get(url, params=params, timeout=10)
-        if response.status_code != 200:
-            return results
+        url = f"{BASE_URL}/tv/{tmdb_id}?api_key={api_key}&language=en-US"
+        req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+        with urllib.request.urlopen(req, timeout=10) as response:
+            seasons = json.loads(response.read().decode('utf-8')).get('seasons', [])
             
-        seasons = response.json().get('seasons', [])
         for season in seasons:
             season_num = season.get('season_number', 0)
-            # Skip specials (Season 0) if you want a clean progression, or keep them
             
-            season_url = f"{BASE_URL}/tv/{tmdb_id}/season/{season_num}"
-            s_response = requests.get(season_url, params=params, timeout=10)
-            if s_response.status_code == 200:
-                episodes = s_response.json().get('episodes', [])
-                for ep in episodes:
-                    results.append({
-                        'id': ep.get('id'),
-                        'title': ep.get('name', f"Episode {ep.get('episode_number')}"),
-                        'season': season_num,
-                        'episode': ep.get('episode_number', 1)
-                    })
+            season_url = f"{BASE_URL}/tv/{tmdb_id}/season/{season_num}?api_key={api_key}&language=en-US"
+            s_req = urllib.request.Request(season_url, headers={'User-Agent': 'Mozilla/5.0'})
+            try:
+                with urllib.request.urlopen(s_req, timeout=10) as s_response:
+                    episodes = json.loads(s_response.read().decode('utf-8')).get('episodes', [])
+                    for ep in episodes:
+                        results.append({
+                            'id': ep.get('id'),
+                            'title': ep.get('name', f"Episode {ep.get('episode_number')}"),
+                            'season': season_num,
+                            'episode': ep.get('episode_number', 1)
+                        })
+            except Exception as e:
+                logger(f"TMDb index season {season_num} failure: {e}", level="ERROR")
         return results
     except Exception as e:
         logger(f"TMDb indexing loop failure: {e}", level="ERROR")
@@ -82,12 +80,12 @@ def get_all_episodes(tmdb_id):
 
 def get_episode_data(tmdb_id, season_num, episode_num):
     """Resolves granular contextual nodes for individual episodes."""
-    params = {"api_key": get_api_key(), "language": "en-US"}
+    api_key = get_api_key()
     try:
-        url = f"{BASE_URL}/tv/{tmdb_id}/season/{season_num}/episode/{episode_num}"
-        response = requests.get(url, params=params, timeout=10)
-        if response.status_code == 200:
-            data = response.json()
+        url = f"{BASE_URL}/tv/{tmdb_id}/season/{season_num}/episode/{episode_num}?api_key={api_key}&language=en-US"
+        req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+        with urllib.request.urlopen(req, timeout=10) as response:
+            data = json.loads(response.read().decode('utf-8'))
             still_path = data.get('still_path', '')
             return {
                 'title': data.get('name', ''),

@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import requests
 from ..utils import logger
 
 # Note: You need a valid TVDB v4 API Token

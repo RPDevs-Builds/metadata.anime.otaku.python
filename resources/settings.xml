@@ -1,33 +1,58 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<settings>
+<settings version="1">
     <section id="metadata.anime.otaku.python">
         <category label="General">
             <setting id="db_auto_update" type="boolean" label="Automatically update local mapping database">
                 <level>0</level>
                 <default>true</default>
             </setting>
-            <setting id="db_update_interval" type="number" label="Database check interval (days)">
+            <setting id="db_update_interval" type="integer" label="Database check interval (days)">
                 <level>0</level>
                 <default>7</default>
                 <dependencies>
                     <dependency setting="db_auto_update" expression="true"/>
                 </dependencies>
             </setting>
+            <setting id="enable_filler" type="boolean" label="Enable Filler tagging (animefillerlist.com)">
+                <level>0</level>
+                <default>true</default>
+            </setting>
         </category>
         <category label="Providers">
-            <setting id="fallback_provider" type="string" label="Primary Episode/Text Metadata Provider">
+            <setting id="provider_anizip" type="boolean" label="Enable AniZip (Preferred for TVDB Mappings)">
                 <level>0</level>
-                <options>
-                    <option>TheTVDB</option>
-                    <option>TMDb</option>
-                </options>
-                <default>TheTVDB</default>
+                <default>true</default>
             </setting>
-            <setting id="tmdb_api_key" type="string" label="Custom TMDb API Key (Optional)">
+            <setting id="provider_jikan" type="boolean" label="Enable Jikan (MyAnimeList)">
+                <level>0</level>
+                <default>true</default>
+            </setting>
+            <setting id="provider_kitsu" type="boolean" label="Enable Kitsu">
+                <level>0</level>
+                <default>true</default>
+            </setting>
+            <setting id="provider_simkl" type="boolean" label="Enable Simkl">
+                <level>0</level>
+                <default>true</default>
+            </setting>
+            <setting id="provider_tvdb" type="boolean" label="Enable TVDB (Fallback)">
+                <level>0</level>
+                <default>true</default>
+            </setting>
+        </category>
+        <category label="API Keys">
+            <setting id="simkl_api_key" type="string" label="Simkl Client ID (Replace if empty/failing)">
                 <level>1</level>
-                <default></default>
+                <default>4d63b27b3fa6972e7370ce15119dc9469e71ecfc647037f3747fccb2ef10f92d</default>
                 <dependencies>
-                    <dependency setting="fallback_provider" expression="TMDb"/>
+                    <dependency setting="provider_simkl" expression="true"/>
+                </dependencies>
+            </setting>
+            <setting id="tvdb_api_key" type="string" label="TVDB API Key (Replace if empty/failing)">
+                <level>1</level>
+                <default>a832f059-e9eb-4a1b-bd5b-56af7b5ce1bf</default>
+                <dependencies>
+                    <dependency setting="provider_tvdb" expression="true"/>
                 </dependencies>
             </setting>
         </category>

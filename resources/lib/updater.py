@@ -2,7 +2,7 @@
 import os
 import shutil
 import time
-import requests
+import urllib.request
 import xbmcaddon
 import xbmcvfs
 from .utils import logger
@@ -15,7 +15,7 @@ def run_sync_check():
     Downloads tracking updates into native userdata system layers.
     """
     addon = xbmcaddon.Addon('metadata.anime.otaku.python')
-    if not addon.getSettingBool('db_auto_update'):
+    if addon.getSetting('db_auto_update') != 'true':
         return
 
     profile_dir = xbmcvfs.translatePath(addon.getAddonInfo('profile'))
@@ -50,12 +50,13 @@ def _download_mappings(target_dir, timestamp_file, current_time):
     final_db_path = os.path.join(target_dir, 'anime_mappings.db')
     
     try:
-        response = requests.get(MAPPINGS_URL, stream=True, timeout=20)
-        response.raise_for_status()
-        
-        with open(temp_db_path, 'wb') as f:
-            for chunk in response.iter_content(chunk_size=8192):
-                if chunk:
+        req = urllib.request.Request(MAPPINGS_URL, headers={'User-Agent': 'Mozilla/5.0'})
+        with urllib.request.urlopen(req, timeout=20) as response:
+            with open(temp_db_path, 'wb') as f:
+                while True:
+                    chunk = response.read(8192)
+                    if not chunk:
+                        break
                     f.write(chunk)
                     
         if os.path.exists(final_db_path):

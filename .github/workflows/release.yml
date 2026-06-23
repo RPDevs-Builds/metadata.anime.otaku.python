@@ -5,10 +5,11 @@ on:
     branches:
       - main
     tags:
+      - 'v*'
     paths-ignore:
       - 'zips/**'
-      - 'v*'
   workflow_dispatch:
+
 
 permissions:
   contents: write
@@ -54,6 +55,7 @@ jobs:
           cp "$ZIP_NAME" "zips/"
 
       - name: Commit and Push to Repo
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
@@ -69,7 +71,7 @@ jobs:
             ${{ env.ZIP_NAME }}
             zips/${{ env.ZIP_NAME }}
           draft: false
-          prerelease: ${{ github.ref == 'refs/heads/main' }}
-          tag_name: ${{ github.ref == 'refs/heads/main' && 'dev' || github.ref_name }}
-          name: ${{ github.ref == 'refs/heads/main' && 'Development Build' || github.ref_name }}
+          prerelease: ${{ !startsWith(github.ref, 'refs/tags/') }}
+          tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || 'dev' }}
+          name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || 'Development Build' }}
           generate_release_notes: true
