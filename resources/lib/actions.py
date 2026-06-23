@@ -20,7 +20,7 @@ except ImportError:
 # Initialize local SQLite cache schema
 init_db()
 
-def router(query_string, args):
+def router(query_string, args, mode='tvshow'):
     handle = int(args[1])
     
     if query_string.startswith('?'):
@@ -31,14 +31,22 @@ def router(query_string, args):
     
     if action == 'find':
         title = params.get('title', [''])[0]
-        find_show(handle, title)
+        if mode == 'movie':
+            from .movies import find_movie
+            find_movie(handle, title)
+        else:
+            find_show(handle, title)
     elif action == 'nfourl':
         nfo_text = params.get('nfo', [''])[0]
         from .nfo import parse_nfo_and_search
         parse_nfo_and_search(handle, nfo_text)
     elif action == 'getdetails':
         url = params.get('url', [''])[0]
-        get_series_details(handle, url)
+        if mode == 'movie':
+            from .movies import get_movie_details
+            get_movie_details(handle, url)
+        else:
+            get_series_details(handle, url)
     elif action == 'getepisodelist':
         url = params.get('url', [''])[0]
         get_episode_list(handle, url)

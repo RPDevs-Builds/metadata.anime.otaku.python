@@ -45,7 +45,7 @@ Based on the files, the `anime_mappings.db` database, and the bug fixes we've pu
 *Focus: Handling weird anime setups and local user overrides.*
 
 * [x] **NFO Parsing (`nfo.py`):** Allow the scraper to read local `.nfo` files to explicitly set an AniList or TVDB ID, bypassing the search phase.
-* [ ] **Formatting Logic (`episodes.py`):** Handle Anime Movies vs. OVAs vs. TV Shows accurately.
+* [x] **Formatting Logic (`movies.py`):** Handle Anime Movies vs. OVAs vs. TV Shows accurately via dedicated movie scraper.
 * [x] **Settings Integration (`settings.xml`):** Ensure user preferences (e.g., enabling/disabling specific providers, configuring custom API keys) actively modify the scraping logic.
 
 ### Phase 4: Polish, Optimization & Release (⚡ *Completed*)
@@ -60,8 +60,6 @@ Based on the files, the `anime_mappings.db` database, and the bug fixes we've pu
 
 ## 🛠️ Next Steps for Us
 
-To proceed with Phase 3 and improve overall scraper reliability:
+To improve overall scraper reliability:
 
-1. **Ratings Engine (`ratings.py`)**: Implement fallback ratings (e.g., try MAL, fallback to Trakt, fallback to IMDb).
-2. **Artwork Polish**: Incorporate additional artwork fallback engines (Fanart.tv).
-3. **Formatting Logic (`episodes.py`)**: Handle Anime Movies vs. OVAs vs. TV Shows accurately.
+1. **Artwork Polish**: Incorporate additional artwork fallback engines (Fanart.tv).

@@ -6,6 +6,9 @@
     <extension point="xbmc.metadata.scraper.tvshows" library="scraper.py">
         <provides>tvshows episodes</provides>
     </extension>
+    <extension point="xbmc.metadata.scraper.movies" library="scraper_movies.py">
+        <provides>movies</provides>
+    </extension>
     <extension point="kodi.context.item">
         <menu id="kodi.core.main">
             <item library="context_main.py">

@@ -18,6 +18,7 @@ By adapting the clean architecture of Kodi's official `metadata.tvdb.com.python`
 * 📡 **Hybrid Processing Engine:** Discovers trending streams via AniList's ultra-fast GraphQL infrastructure and falls back gracefully to secondary data pools matching user settings.
 * 🔄 **Asynchronous Database Syncing:** Runs non-blocking background file checking intervals to safely sync down up-to-date community mapping updates from the upstream master repository without causing visual UI stuttering.
 * 🌍 **Localization Flexibility:** Features independent language preference controls (`English` or `Romaji`) for both the Indexer (Kodi GUI) and the included directory Renamer tool.
+* 🎬 **Dedicated Movie Scraper:** Added native support for anime movies, OVAs, ONAs, and special features via a dedicated scraper extension point (`scraper_movies.py`) that queries TMDb's movie endpoints.
 * 📦 **Settings Management:** Includes an advanced configuration dashboard featuring instant Backup and Restore capabilities for safe settings preservation.
 * 📝 **Custom Diagnostic Logging:** Features an advanced logging engine allowing you to define custom diagnostic log directories separate from the standard `kodi.log` for easy troubleshooting.
 * 🛠️ **Robust Exception Interception:** Features an isolated diagnostic execution ring (`debugger.py`) that captures raw application-level trace vectors, logging errors gracefully into the system storage layout.
@@ -26,18 +27,19 @@ By adapting the clean architecture of Kodi's official `metadata.tvdb.com.python`
 
 ## 🏗️ Architecture
 
-The framework functions directly inside Kodi's native metadata extraction ring (`xbmc.metadata.scraper.tvshows`) across four decoupled lifecycle hooks:
+The framework functions directly inside Kodi's native metadata extraction rings (`xbmc.metadata.scraper.tvshows` and `xbmc.metadata.scraper.movies`) across four decoupled lifecycle hooks:
 
 ```text
- [ Step 1: find ]            --> Searches for the matching show title using the AniList GraphQL engine.
+ [ Step 1: find ]            --> Searches for the matching show/movie title using the AniList GraphQL engine.
         │
  [ Local Mapping Lookup ]     --> Pulls the structural translation mapping parameters via local SQLite.
         │
- [ Step 2: getdetails ]      --> Hydrates high-level series assets (Plot, Posters, Banner Art, Fanart).
+ [ Step 2: getdetails ]      --> Hydrates high-level series/movie assets (Plot, Posters, Banner Art, Fanart).
         │
- [ Step 3: getepisodelist ]  --> Compiles the explicit SxxExx directory containing target episode keys.
+ [ Step 3: getepisodelist ]  --> Compiles the explicit SxxExx directory containing target episode keys (TV shows only).
         │
- [ Step 4: getepisodedetails]--> Resolves granular localized metadata descriptions per matching video node.
+ [ Step 4: getepisodedetails]--> Resolves granular localized metadata descriptions per matching video node (TV shows only).
+```
 
 ---
 
@@ -48,3 +50,4 @@ The framework functions directly inside Kodi's native metadata extraction ring (
 - **English Title Default Fix**: Resolved a case-sensitive issue where default English language setting wasn't correctly resolved, reverting titles to Romaji.
 - **Dynamic Multi-Provider Ratings**: Added primary/secondary rating selectors with fallbacks (AniList, MAL, TMDb, Simkl) and multi-rating Kodi 20+ injection.
 - **Otaku Renamer Overhaul**: Fixed prefix filename collisions, supported recursive directories, matched split seasons, and added parent-folder mappings.
+- **Dedicated Anime Movie Scraper**: Mapped anime movies, OVAs, ONAs, and specials through TMDb's movie database and custom scraper hooks.

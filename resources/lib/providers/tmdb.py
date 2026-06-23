@@ -98,3 +98,31 @@ def get_episode_data(tmdb_id, season_num, episode_num):
     except Exception as e:
         logger(f"TMDb episode node lookup failure: {e}", level="ERROR")
     return {}
+
+def get_movie_data(tmdb_id):
+    """Fetches movie-specific metadata from TMDb."""
+    logger(f"TMDb API: Fetching Movie details for ID {tmdb_id}")
+    api_key = get_api_key()
+    try:
+        url = f"{BASE_URL}/movie/{tmdb_id}?api_key={api_key}&language=en-US"
+        req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+        with urllib.request.urlopen(req, timeout=10) as response:
+            data = json.loads(response.read().decode('utf-8'))
+            genres = [g.get('name') for g in data.get('genres', [])]
+            poster_path = data.get('poster_path', '')
+            backdrop_path = data.get('backdrop_path', '')
+            
+            return {
+                'title': data.get('title', 'Unknown Title'),
+                'overview': data.get('overview', ''),
+                'genre': genres,
+                'siteRating': data.get('vote_average', 0.0),
+                'votes': data.get('vote_count', 0),
+                'first_air_date': data.get('release_date', ''),
+                'poster': f"https://image.tmdb.org/t/p/w500{poster_path}" if poster_path else '',
+                'fanart': f"https://image.tmdb.org/t/p/original{backdrop_path}" if backdrop_path else ''
+            }
+    except Exception as e:
+        logger(f"TMDb Movie parsing fault: {e}", level="ERROR")
+        
+    return {'title': f"TMDb Movie {tmdb_id}", 'overview': "Metadata extraction bypassed."}

@@ -1,0 +1,314 @@
+# -*- coding: utf-8 -*-
+import urllib.parse
+import urllib.request
+import json
+from .db_connector import get_mapping
+from .providers import anilist, tvdb, tmdb, simkl
+from .utils import logger
+
+try:
+    import xbmc
+    import xbmcplugin
+    import xbmcgui
+except ImportError:
+    pass
+
+def search_movies_anilist(query):
+    url = 'https://graphql.anilist.co'
+    query_str = '''
+    query ($search: String) {
+      Page(page: 1, perPage: 10) {
+        media(search: $search, type: ANIME, format_in: [MOVIE, OVA, SPECIAL, ONA]) {
+          id
+          title { romaji english }
+          format
+        }
+      }
+    }
+    '''
+    variables = {'search': query}
+    try:
+        req_data = json.dumps({'query': query_str, 'variables': variables}).encode('utf-8')
+        req = urllib.request.Request(
+            url,
+            data=req_data,
+            headers={'Content-Type': 'application/json', 'User-Agent': 'Mozilla/5.0'}
+        )
+        with urllib.request.urlopen(req, timeout=10) as response:
+            data = json.loads(response.read().decode('utf-8'))
+            return [{'id': m['id'], 'title': m['title'], 'format': m['format']} 
+                    for m in data.get('data', {}).get('Page', {}).get('media', [])]
+    except Exception as e:
+        logger(f"AniList Movie Search Error: {e}", level="ERROR")
+        return []
+
+def find_movie(handle, title):
+    try:
+        import xbmcaddon
+        title_language = (xbmcaddon.Addon('metadata.anime.otaku.python').getSetting('indexer_title_language') or 'english').lower()
+    except ImportError:
+        title_language = 'english'
+
+    results = search_movies_anilist(title)
+    
+    # Fall back to standard anime search if no movie-filtered results are returned
+    if not results:
+        logger("No movie-filtered results. Falling back to standard search.", level="INFO")
+        results = anilist.search_anime(title)
+    
+    for anime in results:
+        mapping = get_mapping(anime['id'], 'anilist_id')
+        
+        eng_title = anime.get('title', {}).get('english')
+        rom_title = anime.get('title', {}).get('romaji')
+        
+        if title_language == 'english':
+            preferred_title = eng_title or rom_title or 'Unknown Anime'
+        else:
+            preferred_title = rom_title or eng_title or 'Unknown Anime'
+            
+        url_params = {
+            'anilist_id': str(anime['id']),
+            'title_eng': preferred_title
+        }
+        if mapping:
+            url_params.update({
+                'mal_id': mapping.get('mal_id', ''),
+                'tvdb_id': mapping.get('thetvdb_id', ''),
+                'tmdb_id': mapping.get('themoviedb_id', ''),
+                'imdb_id': mapping.get('imdb_id', ''),
+                'simkl_id': mapping.get('simkl_id', ''),
+                'mal_score': mapping.get('score', ''),
+            })
+            
+        url_params = {k: str(v) for k, v in url_params.items() if v}
+        encoded_url = urllib.parse.urlencode(url_params)
+        
+        liz = xbmcgui.ListItem(preferred_title, offscreen=True)
+        # Returns isFolder=True so that getdetails is triggered by Kodi
+        xbmcplugin.addDirectoryItem(handle=handle, url=encoded_url, listitem=liz, isFolder=True)
+        
+    xbmcplugin.endOfDirectory(handle)
+
+def get_movie_details(handle, url):
+    ids = dict(urllib.parse.parse_qsl(url))
+    
+    anilist_id = ids.get('anilist_id')
+    tvdb_id = ids.get('tvdb_id')
+    tmdb_id = ids.get('tmdb_id')
+    imdb_id = ids.get('imdb_id')
+    simkl_id = ids.get('simkl_id')
+    
+    if anilist_id and not (tvdb_id or tmdb_id or simkl_id):
+        mapping = get_mapping(anilist_id, 'anilist_id')
+        if mapping:
+            tvdb_id = mapping.get('thetvdb_id')
+            tmdb_id = mapping.get('themoviedb_id')
+            imdb_id = mapping.get('imdb_id')
+            simkl_id = mapping.get('simkl_id')
+            
+    tvdb_data = tvdb.get_series_details_api(tvdb_id) if tvdb_id else {}
+    anilist_data = anilist.get_anime_details(anilist_id) if anilist_id else {}
+    tmdb_data = tmdb.get_movie_data(tmdb_id) if tmdb_id else {}
+    simkl_data = simkl.get_ratings(simkl_id) if simkl_id else {}
+    
+    try:
+        import xbmcaddon
+        addon = xbmcaddon.Addon('metadata.anime.otaku.python')
+        title_language = (addon.getSetting('indexer_title_language') or 'english').lower()
+        enable_posters = addon.getSettingBool('enable_posters') if addon.getSetting('enable_posters') else True
+        enable_banners = addon.getSettingBool('enable_banners') if addon.getSetting('enable_banners') else True
+        enable_fanart = addon.getSettingBool('enable_fanart') if addon.getSetting('enable_fanart') else True
+        
+        rating_source = addon.getSetting('rating_source') or 'AniList'
+        enable_anilist_rating = addon.getSettingBool('enable_anilist_rating') if addon.getSetting('enable_anilist_rating') else True
+        enable_mal_rating = addon.getSettingBool('enable_mal_rating') if addon.getSetting('enable_mal_rating') else True
+        enable_tmdb_rating = addon.getSettingBool('enable_tmdb_rating') if addon.getSetting('enable_tmdb_rating') else True
+        enable_simkl_rating = addon.getSettingBool('enable_simkl_rating') if addon.getSetting('enable_simkl_rating') else True
+        
+        plot_source = addon.getSetting('plot_source') or 'AniList'
+        release_date_source = addon.getSetting('release_date_source') or 'AniList'
+        fetch_trailers = addon.getSettingBool('fetch_trailers') if addon.getSetting('fetch_trailers') else True
+        fetch_cast = addon.getSettingBool('fetch_cast') if addon.getSetting('fetch_cast') else True
+    except ImportError:
+        title_language = 'english'
+        enable_posters = True
+        enable_banners = True
+        enable_fanart = True
+        rating_source = 'AniList'
+        enable_anilist_rating = True
+        enable_mal_rating = True
+        enable_tmdb_rating = True
+        enable_simkl_rating = True
+        plot_source = 'AniList'
+        release_date_source = 'AniList'
+        fetch_trailers = True
+        fetch_cast = True
+        
+    eng_title = anilist_data.get('title', {}).get('english')
+    rom_title = anilist_data.get('title', {}).get('romaji')
+    
+    if title_language == 'english':
+        title = eng_title or rom_title or 'Unknown Anime'
+    else:
+        title = rom_title or eng_title or 'Unknown Anime'
+        
+    liz = xbmcgui.ListItem(title, offscreen=True)
+    
+    unique_ids = {}
+    if tvdb_id: unique_ids['tvdb'] = str(tvdb_id)
+    if imdb_id: unique_ids['imdb'] = str(imdb_id)
+    if tmdb_id: unique_ids['tmdb'] = str(tmdb_id)
+    if anilist_id: unique_ids['anilist'] = str(anilist_id)
+    if ids.get('mal_id'): unique_ids['mal_id'] = str(ids.get('mal_id'))
+    if simkl_id: unique_ids['simkl_id'] = str(simkl_id)
+    
+    # Resolve plot/overview preference
+    plot = anilist_data.get('description', '')
+    if plot_source == 'TMDb' and tmdb_data.get('overview'):
+        plot = tmdb_data['overview']
+    elif plot_source == 'TVDB' and tvdb_data.get('overview'):
+        plot = tvdb_data['overview']
+        
+    # Resolve release date preference
+    premiered = anilist_data.get('premiered', '')
+    if release_date_source == 'TMDb' and tmdb_data.get('first_air_date'):
+        premiered = tmdb_data['first_air_date']
+    elif release_date_source == 'TVDB' and tvdb_data.get('firstAired'):
+        premiered = tvdb_data['firstAired']
+        
+    # Parse scores
+    anilist_score = float(anilist_data.get('average_score', 0) or 0) / 10.0
+    mal_score_str = ids.get('mal_score')
+    mal_score = float(mal_score_str) if mal_score_str else 0.0
+    tmdb_score = float(tmdb_data.get('siteRating', 0.0) or 0.0)
+    tmdb_votes = int(tmdb_data.get('votes', 0) or 0)
+    simkl_score = float(simkl_data.get('simkl', {}).get('rating', 0.0) or 0.0)
+    simkl_votes = int(simkl_data.get('simkl', {}).get('votes', 0) or 0)
+    
+    # Resolve primary rating and votes
+    primary_rating = 0.0
+    primary_votes = 0
+    primary_rating_type = rating_source.lower()
+    
+    if rating_source == 'AniList' and anilist_score > 0:
+        primary_rating = anilist_score
+    elif rating_source == 'MyAnimeList' and mal_score > 0:
+        primary_rating = mal_score
+        primary_rating_type = 'mal'
+    elif rating_source == 'TMDb' and tmdb_score > 0:
+        primary_rating = tmdb_score
+        primary_votes = tmdb_votes
+        primary_rating_type = 'tmdb'
+    elif rating_source == 'Simkl' and simkl_score > 0:
+        primary_rating = simkl_score
+        primary_votes = simkl_votes
+        primary_rating_type = 'simkl'
+        
+    # Fallback rating cascade
+    if primary_rating == 0.0:
+        if anilist_score > 0:
+            primary_rating = anilist_score
+            primary_rating_type = 'anilist'
+        elif mal_score > 0:
+            primary_rating = mal_score
+            primary_rating_type = 'mal'
+        elif tmdb_score > 0:
+            primary_rating = tmdb_score
+            primary_votes = tmdb_votes
+            primary_rating_type = 'tmdb'
+        elif simkl_score > 0:
+            primary_rating = simkl_score
+            primary_votes = simkl_votes
+            primary_rating_type = 'simkl'
+            
+    # Set movie metadata dictionary
+    info_dict = {
+        'title': title,
+        'plot': plot,
+        'genre': anilist_data.get('genres', []),
+        'studio': anilist_data.get('studio', ''),
+        'premiered': premiered,
+        'rating': primary_rating,
+        'votes': primary_votes,
+        'mediatype': 'movie'
+    }
+    
+    if fetch_cast and anilist_data.get('characters'):
+        info_dict['cast'] = [(char['name'], char['role']) for char in anilist_data['characters']]
+        
+    if fetch_trailers and anilist_data.get('trailer_site') == 'youtube' and anilist_data.get('trailer_id'):
+        info_dict['trailer'] = f"plugin://plugin.video.youtube/play/?video_id={anilist_data['trailer_id']}"
+        
+    year = anilist_data.get('year')
+    if year:
+        info_dict['year'] = int(year)
+        
+    liz.setInfo('video', info_dict)
+    
+    # Artwork mapping
+    poster = anilist_data.get('poster')
+    banner = anilist_data.get('banner')
+    
+    art_dict = {}
+    if poster and enable_posters:
+        art_dict['poster'] = poster
+        liz.addAvailableArtwork(poster, 'poster')
+    if banner:
+        if enable_banners:
+            art_dict['banner'] = banner
+            liz.addAvailableArtwork(banner, 'banner')
+        if enable_fanart:
+            art_dict['fanart'] = banner
+            liz.addAvailableArtwork(banner, 'fanart')
+            
+    if art_dict:
+        liz.setArt(art_dict)
+        
+    # Modern InfoTagVideo mapping (Kodi 20+)
+    try:
+        vtag = liz.getVideoInfoTag()
+        vtag.setTitle(title)
+        vtag.setPlot(plot)
+        vtag.setGenres(anilist_data.get('genres', []))
+        vtag.setStudios([anilist_data.get('studio', '')] if anilist_data.get('studio') else [])
+        vtag.setMediaType('movie')
+        if year:
+            vtag.setYear(int(year))
+        if premiered:
+            vtag.setPremiered(premiered)
+        vtag.setUniqueIDs(unique_ids, 'mal_id' if 'mal_id' in unique_ids else 'tvdb')
+        
+        # Inject primary rating
+        if primary_rating > 0:
+            vtag.setRating(primary_rating, primary_votes, primary_rating_type, True)
+            
+        # Additional ratings if enabled
+        if enable_anilist_rating and anilist_score > 0:
+            vtag.setRating(anilist_score, 0, 'anilist', primary_rating_type == 'anilist')
+        if enable_mal_rating and mal_score > 0:
+            vtag.setRating(mal_score, 0, 'mal', primary_rating_type == 'mal')
+        if enable_tmdb_rating and tmdb_score > 0:
+            vtag.setRating(tmdb_score, tmdb_votes, 'tmdb', primary_rating_type == 'tmdb')
+        if enable_simkl_rating and simkl_score > 0:
+            vtag.setRating(simkl_score, simkl_votes, 'simkl', primary_rating_type == 'simkl')
+            
+        if fetch_cast and anilist_data.get('characters'):
+            vtag.setCast([xbmc.Actor(char['name'], char['role']) for char in anilist_data['characters']])
+            
+        if fetch_trailers and anilist_data.get('trailer_site') == 'youtube' and anilist_data.get('trailer_id'):
+            vtag.setTrailer(f"plugin://plugin.video.youtube/play/?video_id={anilist_data['trailer_id']}")
+            
+        if poster and enable_posters:
+            vtag.addAvailableArtwork(poster, 'poster')
+        if banner:
+            if enable_banners:
+                vtag.addAvailableArtwork(banner, 'banner')
+            if enable_fanart:
+                vtag.addAvailableArtwork(banner, 'fanart')
+    except Exception as e:
+        logger(f"Error setting Movie VideoInfoTag: {e}", level="WARNING")
+        
+    liz.setUniqueIDs(unique_ids, 'mal_id' if 'mal_id' in unique_ids else 'tvdb')
+    
+    xbmcplugin.setResolvedUrl(handle=handle, succeeded=True, listitem=liz)
