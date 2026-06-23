@@ -3,7 +3,7 @@ import urllib.parse
 import urllib.request
 import json
 from .db_connector import get_mapping
-from .providers import anilist, tvdb, tmdb, simkl
+from .providers import anilist, tvdb, tmdb, simkl, fanart
 from .utils import logger
 
 try:
@@ -119,6 +119,9 @@ def get_movie_details(handle, url):
         enable_posters = addon.getSettingBool('enable_posters') if addon.getSetting('enable_posters') else True
         enable_banners = addon.getSettingBool('enable_banners') if addon.getSetting('enable_banners') else True
         enable_fanart = addon.getSettingBool('enable_fanart') if addon.getSetting('enable_fanart') else True
+        enable_fanart_tv = addon.getSettingBool('enable_fanart_tv') if addon.getSetting('enable_fanart_tv') else True
+        enable_clearlogos = addon.getSettingBool('enable_clearlogos') if addon.getSetting('enable_clearlogos') else True
+        enable_clearart = addon.getSettingBool('enable_clearart') if addon.getSetting('enable_clearart') else True
         
         rating_source = addon.getSetting('rating_source') or 'AniList'
         enable_anilist_rating = addon.getSettingBool('enable_anilist_rating') if addon.getSetting('enable_anilist_rating') else True
@@ -135,6 +138,9 @@ def get_movie_details(handle, url):
         enable_posters = True
         enable_banners = True
         enable_fanart = True
+        enable_fanart_tv = True
+        enable_clearlogos = True
+        enable_clearart = True
         rating_source = 'AniList'
         enable_anilist_rating = True
         enable_mal_rating = True
@@ -250,6 +256,8 @@ def get_movie_details(handle, url):
     poster = anilist_data.get('poster')
     banner = anilist_data.get('banner')
     
+    fanart_data = fanart.get_art(tmdb_id=tmdb_id, mtype='movies') if enable_fanart_tv else {}
+    
     art_dict = {}
     if poster and enable_posters:
         art_dict['poster'] = poster
@@ -261,6 +269,23 @@ def get_movie_details(handle, url):
         if enable_fanart:
             art_dict['fanart'] = banner
             liz.addAvailableArtwork(banner, 'fanart')
+            
+    if enable_fanart_tv:
+        if enable_clearlogos and fanart_data.get('clearlogo'):
+            art_dict['clearlogo'] = fanart_data['clearlogo'][0]
+            for logo in fanart_data['clearlogo']:
+                liz.addAvailableArtwork(logo, 'clearlogo')
+        if enable_clearart and fanart_data.get('clearart'):
+            art_dict['clearart'] = fanart_data['clearart'][0]
+            for cart in fanart_data['clearart']:
+                liz.addAvailableArtwork(cart, 'clearart')
+        if enable_fanart and fanart_data.get('fanart'):
+            art_dict['fanart'] = fanart_data['fanart'][0]
+            for fart in fanart_data['fanart']:
+                liz.addAvailableArtwork(fart, 'fanart')
+        if enable_posters and fanart_data.get('thumb'):
+            for thumb in fanart_data['thumb']:
+                liz.addAvailableArtwork(thumb, 'thumb')
             
     if art_dict:
         liz.setArt(art_dict)
@@ -306,6 +331,20 @@ def get_movie_details(handle, url):
                 vtag.addAvailableArtwork(banner, 'banner')
             if enable_fanart:
                 vtag.addAvailableArtwork(banner, 'fanart')
+                
+        if enable_fanart_tv:
+            if enable_clearlogos and fanart_data.get('clearlogo'):
+                for logo in fanart_data['clearlogo']:
+                    vtag.addAvailableArtwork(logo, 'clearlogo')
+            if enable_clearart and fanart_data.get('clearart'):
+                for cart in fanart_data['clearart']:
+                    vtag.addAvailableArtwork(cart, 'clearart')
+            if enable_fanart and fanart_data.get('fanart'):
+                for fart in fanart_data['fanart']:
+                    vtag.addAvailableArtwork(fart, 'fanart')
+            if enable_posters and fanart_data.get('thumb'):
+                for thumb in fanart_data['thumb']:
+                    vtag.addAvailableArtwork(thumb, 'thumb')
     except Exception as e:
         logger(f"Error setting Movie VideoInfoTag: {e}", level="WARNING")
         

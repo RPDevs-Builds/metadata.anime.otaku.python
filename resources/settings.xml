@@ -42,9 +42,15 @@
         <setting id="enable_posters" type="bool" label="Enable Posters" default="true" />
         <setting id="enable_banners" type="bool" label="Enable Banners" default="true" />
         <setting id="enable_fanart" type="bool" label="Enable Fanart (Backgrounds)" default="true" />
+        
+        <setting type="lsep" label="Premium Artwork (Fanart.tv)" />
+        <setting id="enable_fanart_tv" type="bool" label="Enable Fanart.tv" default="true" />
+        <setting id="enable_clearlogos" type="bool" label="Enable Clearlogos" default="true" />
+        <setting id="enable_clearart" type="bool" label="Enable Clearart" default="true" />
     </category>
 
     <category label="Accounts">
+        <setting id="fanart_tv_api_key" type="text" label="Fanart.tv Client Key (Get at fanart.tv)" default="62fd37f8f94cb4c1f6de720a463ce8c9" />
         <setting id="simkl_api_key" type="text" label="Simkl Client ID (Get at https://simkl.com/apps)" default="4d63b27b3fa6972e7370ce15119dc9469e71ecfc647037f3747fccb2ef10f92d" />
         <setting id="tvdb_api_key" type="text" label="TVDB API Key (Get at https://thetvdb.com/api-information)" default="a832f059-e9eb-4a1b-bd5b-56af7b5ce1bf" />
         <setting id="tmdb_api_key" type="text" label="TMDb API Key (Get at https://www.themoviedb.org/settings/api)" default="af3a53eb387d57fc935e9128468b1899" />

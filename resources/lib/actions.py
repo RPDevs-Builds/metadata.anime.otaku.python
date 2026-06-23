@@ -5,7 +5,7 @@ import xbmcplugin
 import xbmcgui
 import urllib.parse
 from .db_connector import get_mapping
-from .providers import anilist, tvdb, tmdb, simkl
+from .providers import anilist, tvdb, tmdb, simkl, fanart
 from .metadata_engine import fetch_all_metadata, get_cached_episode
 from .database_sync import init_db
 from .utils import logger
@@ -186,6 +186,9 @@ def get_series_details(handle, url):
         enable_posters = addon.getSettingBool('enable_posters') if addon.getSetting('enable_posters') else True
         enable_banners = addon.getSettingBool('enable_banners') if addon.getSetting('enable_banners') else True
         enable_fanart = addon.getSettingBool('enable_fanart') if addon.getSetting('enable_fanart') else True
+        enable_fanart_tv = addon.getSettingBool('enable_fanart_tv') if addon.getSetting('enable_fanart_tv') else True
+        enable_clearlogos = addon.getSettingBool('enable_clearlogos') if addon.getSetting('enable_clearlogos') else True
+        enable_clearart = addon.getSettingBool('enable_clearart') if addon.getSetting('enable_clearart') else True
         
         # New metadata preferences
         rating_source = addon.getSetting('rating_source') or 'AniList'
@@ -204,6 +207,9 @@ def get_series_details(handle, url):
         enable_posters = True
         enable_banners = True
         enable_fanart = True
+        enable_fanart_tv = True
+        enable_clearlogos = True
+        enable_clearart = True
         rating_source = 'AniList'
         enable_anilist_rating = True
         enable_mal_rating = True
@@ -329,6 +335,8 @@ def get_series_details(handle, url):
     poster = anilist_data.get('poster')
     banner = anilist_data.get('banner')
     
+    fanart_data = fanart.get_art(tvdb_id=tvdb_id, tmdb_id=tmdb_id, mtype='tv') if enable_fanart_tv else {}
+    
     art_dict = {}
     if poster and enable_posters:
         art_dict['poster'] = poster
@@ -340,6 +348,23 @@ def get_series_details(handle, url):
         if enable_fanart:
             art_dict['fanart'] = banner
             liz.addAvailableArtwork(banner, 'fanart')
+            
+    if enable_fanart_tv:
+        if enable_clearlogos and fanart_data.get('clearlogo'):
+            art_dict['clearlogo'] = fanart_data['clearlogo'][0]
+            for logo in fanart_data['clearlogo']:
+                liz.addAvailableArtwork(logo, 'clearlogo')
+        if enable_clearart and fanart_data.get('clearart'):
+            art_dict['clearart'] = fanart_data['clearart'][0]
+            for cart in fanart_data['clearart']:
+                liz.addAvailableArtwork(cart, 'clearart')
+        if enable_fanart and fanart_data.get('fanart'):
+            art_dict['fanart'] = fanart_data['fanart'][0]
+            for fart in fanart_data['fanart']:
+                liz.addAvailableArtwork(fart, 'fanart')
+        if enable_posters and fanart_data.get('thumb'):
+            for thumb in fanart_data['thumb']:
+                liz.addAvailableArtwork(thumb, 'thumb')
             
     if art_dict:
         liz.setArt(art_dict)
@@ -388,6 +413,20 @@ def get_series_details(handle, url):
                 vtag.addAvailableArtwork(banner, 'banner')
             if enable_fanart:
                 vtag.addAvailableArtwork(banner, 'fanart')
+                
+        if enable_fanart_tv:
+            if enable_clearlogos and fanart_data.get('clearlogo'):
+                for logo in fanart_data['clearlogo']:
+                    vtag.addAvailableArtwork(logo, 'clearlogo')
+            if enable_clearart and fanart_data.get('clearart'):
+                for cart in fanart_data['clearart']:
+                    vtag.addAvailableArtwork(cart, 'clearart')
+            if enable_fanart and fanart_data.get('fanart'):
+                for fart in fanart_data['fanart']:
+                    vtag.addAvailableArtwork(fart, 'fanart')
+            if enable_posters and fanart_data.get('thumb'):
+                for thumb in fanart_data['thumb']:
+                    vtag.addAvailableArtwork(thumb, 'thumb')
     except Exception as e:
         logger(f"Error setting VideoInfoTag: {e}", level="WARNING")
         
@@ -506,13 +545,29 @@ def get_episode_details(handle, url):
     try:
         import xbmcaddon
         enable_fanart = xbmcaddon.Addon('metadata.anime.otaku.python').getSettingBool('enable_fanart') if xbmcaddon.Addon('metadata.anime.otaku.python').getSetting('enable_fanart') else True
+        enable_fanart_tv = xbmcaddon.Addon('metadata.anime.otaku.python').getSettingBool('enable_fanart_tv') if xbmcaddon.Addon('metadata.anime.otaku.python').getSetting('enable_fanart_tv') else True
+        enable_clearlogos = xbmcaddon.Addon('metadata.anime.otaku.python').getSettingBool('enable_clearlogos') if xbmcaddon.Addon('metadata.anime.otaku.python').getSetting('enable_clearlogos') else True
+        enable_clearart = xbmcaddon.Addon('metadata.anime.otaku.python').getSettingBool('enable_clearart') if xbmcaddon.Addon('metadata.anime.otaku.python').getSetting('enable_clearart') else True
     except ImportError:
         enable_fanart = True
+        enable_fanart_tv = True
+        enable_clearlogos = True
+        enable_clearart = True
         
     image = ep.get('image', '')
     if image and enable_fanart:
         liz.addAvailableArtwork(image, 'thumb')
         liz.setArt({'thumb': image})
+        
+    if enable_fanart_tv and params.get('tvdb_id'):
+        fanart_data = fanart.get_art(tvdb_id=params.get('tvdb_id'), mtype='tv')
+        art_dict = {}
+        if enable_clearlogos and fanart_data.get('clearlogo'):
+            art_dict['clearlogo'] = fanart_data['clearlogo'][0]
+        if enable_clearart and fanart_data.get('clearart'):
+            art_dict['clearart'] = fanart_data['clearart'][0]
+        if art_dict:
+            liz.setArt(art_dict)
     
     # Modern InfoTagVideo mapping (Kodi 20+)
     try:
