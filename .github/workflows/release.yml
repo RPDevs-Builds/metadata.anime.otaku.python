@@ -1,0 +1,60 @@
+import os
+
+workflow_content = """name: Release Kodi Addon
+
+on:
+  push:
+    tags:
+      - 'v*' # Push events to matching v*, i.e. v1.0, v20.15.10
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Extract Addon Name and Version
+        id: vars
+        run: |
+          # Read version from addon.xml
+          VERSION=$(grep -oP '(?<=version=")[^"]*' addon.xml | head -1)
+          ADDON_ID=$(grep -oP '(?<=id=")[^"]*' addon.xml | head -1)
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "ADDON_ID=$ADDON_ID" >> $GITHUB_ENV
+          echo "ZIP_NAME=${ADDON_ID}_v${VERSION}.zip" >> $GITHUB_ENV
+
+      - name: Prepare Addon Directory
+        run: |
+          # Kodi requires the zip structure to contain the addon folder at the root
+          mkdir -p build/${{ env.ADDON_ID }}
+          # Copy relevant files, excluding git and workflow files
+          rsync -a --exclude='.git' --exclude='.github' --exclude='build' . build/${{ env.ADDON_ID }}/
+
+      - name: Create Zip Archive
+        run: |
+          cd build
+          zip -r ../${{ env.ZIP_NAME }} ${{ env.ADDON_ID }}
+
+      - name: Setup Zips Directory (Optional for gh-pages/hosting)
+        run: |
+          mkdir -p zips
+          cp ${{ env.ZIP_NAME }} zips/
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: ${{ env.ZIP_NAME }}
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_PAT }}
+"""
+
+os.makedirs('.github/workflows', exist_ok=True)
+with open('.github/workflows/release.yml', 'w') as f:
+    f.write(workflow_content)
+    
+print("GitHub Action workflow created.")
