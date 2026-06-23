@@ -37,7 +37,7 @@ Based on the files, the `anime_mappings.db` database, and the bug fixes we've pu
 
 * [x] **AniList API (`anilist.py`):** GraphQL query for primary show info, synopses, and genres. (Implemented via standard `urllib.request`)
 * [x] **TVDB/TMDB APIs (`tvdb.py`, `tmdb.py`):** Fetch season/episode structures and exact broadcast dates. (Implemented via standard `urllib.request`)
-* [/] **Artwork Engine (`artwork.py`):** Aggregate posters, fanart, and banners. (MAPPED: Currently using AniList/TMDB primary artwork directly. Advanced Fanart.tv integration remains a future polish item.)
+* [x] **Artwork Engine (`artwork.py`):** Aggregate posters, fanart, and banners. (MAPPED: Integrated Fanart.tv for premium Clearlogos, Clearart, Thumbs, and Fanart fallbacks alongside AniList/TMDB primary artwork.)
 * [x] **Ratings Engine (`ratings.py`):** Implement fallback ratings (e.g., try MAL, fallback to Trakt, fallback to IMDb). (MAPPED: Implemented multi-provider rating fallback chain with primary/secondary score settings.)
 
 ### Phase 3: Edge Cases & Advanced Features (📍 *We are currently here*)
@@ -62,4 +62,4 @@ Based on the files, the `anime_mappings.db` database, and the bug fixes we've pu
 
 To improve overall scraper reliability:
 
-1. **Artwork Polish**: Incorporate additional artwork fallback engines (Fanart.tv).
+1. **Simkl Syncing**: Implement two-way sync for watch status and ratings with Simkl and MyAnimeList.

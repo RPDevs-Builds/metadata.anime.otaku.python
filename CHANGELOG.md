@@ -2,6 +2,15 @@
 
 All notable changes to `metadata.anime.otaku.python` will be documented in this file.
 
+## [1.1.2] - 2026-06-23
+
+### Added
+- **Fanart.tv Premium Artwork Provider:** Added a dedicated Fanart.tv API scraper to fetch high-quality UI assets including `clearlogo`, `clearart`, `thumb`, and alternate backgrounds.
+- **Granular Artwork Toggles:** Expanded the Fan Art settings tab with toggles to selectively enable/disable clearlogos and clearart, alongside a new input field for personal Fanart.tv API keys.
+- **Transparent Logo Injection:** Updated the UI injector logic inside both TV Shows (`actions.py`) and Anime Movies (`movies.py`) to properly inject transparent clearlogos using `.setArt()` and `.addAvailableArtwork()` so modern Kodi skins can correctly display them.
+
+---
+
 ## [1.1.1] - 2026-06-23
 
 ### Added
