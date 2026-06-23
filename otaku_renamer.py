@@ -153,7 +153,7 @@ def resolve_anime_identity(path, title_language='english'):
 
     return None, None, is_season, None
 
-def get_consolidated_episodes(primary_mal_id, anime_title, is_season):
+def get_consolidated_episodes(primary_mal_id, anime_title, is_season, primary_year):
     """
     Fetch all episode mapping objects for the primary MAL ID and related parts.
     Ensures multi-part split seasons (like AOT Season 3 Part 2) are mapped correctly.
@@ -167,6 +167,7 @@ def get_consolidated_episodes(primary_mal_id, anime_title, is_season):
         for ep_data in primary_map.values():
             ep_id = ep_data.get('tvdbId')
             if ep_id and ep_id not in seen_ids:
+                ep_data['season_year'] = primary_year
                 episodes.append(ep_data)
                 seen_ids.add(ep_id)
                 
@@ -200,9 +201,11 @@ def get_consolidated_episodes(primary_mal_id, anime_title, is_season):
                     print(f"  🔗 Found related part: {related_title} (MAL ID: {row['mal_id']})")
                     related_map = get_anizip_mappings(row['mal_id'])
                     if related_map:
+                        _, related_year = get_anilist_title(row['mal_id'], 'english')
                         for ep_data in related_map.values():
                             ep_id = ep_data.get('tvdbId')
                             if ep_id and ep_id not in seen_ids:
+                                ep_data['season_year'] = related_year
                                 episodes.append(ep_data)
                                 seen_ids.add(ep_id)
             conn.close()
@@ -306,7 +309,7 @@ def process_directory(directory, dry_run=True):
     print(f"\n📂 Scanning Directory: {path.name}")
     print(f"  ☁️ Identified Anime -> MAL ID: {mal_id} ({anime_title})")
 
-    episodes_list = get_consolidated_episodes(mal_id, anime_title, is_season)
+    episodes_list = get_consolidated_episodes(mal_id, anime_title, is_season, year)
     if not episodes_list:
         print("  ❌ No episode mapping data found on AniZip. Skipping.")
         return
@@ -348,6 +351,7 @@ def process_directory(directory, dry_run=True):
             season = ep_data.get('seasonNumber', 1)
             episode = ep_data.get('episodeNumber', int(ep_num_str))
             ep_title = ep_data.get('title', {}).get('en', '')
+            season_year = ep_data.get('season_year')
             
             clean_anime_title = re.sub(r'[\\/*?:"<>|]', "", anime_title).strip()
             # Remove Season suffix from base title if present to avoid duplicating it
@@ -382,8 +386,8 @@ def process_directory(directory, dry_run=True):
                 sf = sf.replace('Season 01', f"Season {season:02d}")
                 sf = sf.replace('Season 1', f"Season {season}")
                 if '(Year)' in sf:
-                    if year:
-                        sf = sf.replace('(Year)', f"({year})")
+                    if season_year:
+                        sf = sf.replace('(Year)', f"({season_year})")
                     else:
                         sf = sf.replace(' (Year)', '').replace('(Year)', '')
                 season_folder_name = sf.strip()
