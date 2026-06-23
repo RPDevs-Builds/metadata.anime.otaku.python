@@ -2,6 +2,11 @@
 
 All notable changes to `metadata.anime.otaku.python` will be documented in this file.
 
+## [1.2.0] - 2026-06-23
+
+### Added
+- **Advanced Renamer Options**: Added comprehensive folder, season, and episode formatting options for the Otaku Renamer tool. You can now define whether to add years to base directories, toggle `Season 01` sub-folders, and strip titles down to minimal `S01E01` formats.
+
 ## [1.1.2] - 2026-06-23
 
 ### Added

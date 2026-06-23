@@ -31,11 +31,12 @@ def search_local_db(title):
     return None, None
 
 def get_anilist_title(mal_id, title_language='english'):
-    """Fetch preferred title from AniList GraphQL."""
+    """Fetch preferred title and year from AniList GraphQL."""
     query = '''
     query ($id: Int) {
       Media(idMal: $id, type: ANIME) {
         title { romaji english }
+        seasonYear
       }
     }
     '''
@@ -47,15 +48,17 @@ def get_anilist_title(mal_id, title_language='english'):
         )
         with urllib.request.urlopen(req, timeout=10) as response:
             data = json.loads(response.read().decode('utf-8'))
-            title_dict = data.get('data', {}).get('Media', {}).get('title', {})
+            anime = data.get('data', {}).get('Media', {})
+            title_dict = anime.get('title', {})
             eng_title = title_dict.get('english')
             rom_title = title_dict.get('romaji')
+            year = anime.get('seasonYear')
             if title_language == 'english':
-                return eng_title or rom_title
+                return eng_title or rom_title, year
             else:
-                return rom_title or eng_title
+                return rom_title or eng_title, year
     except:
-        return None
+        return None, None
 
 def search_anilist(title, title_language='english'):
     """Fallback to AniList GraphQL search."""
@@ -65,6 +68,7 @@ def search_anilist(title, title_language='english'):
       Media(search: $search, type: ANIME) {
         idMal
         title { romaji english }
+        seasonYear
       }
     }
     '''
@@ -80,14 +84,15 @@ def search_anilist(title, title_language='english'):
             if anime and anime.get('idMal'):
                 eng_title = anime['title'].get('english')
                 rom_title = anime['title'].get('romaji')
+                year = anime.get('seasonYear')
                 if title_language == 'english':
                     pref_title = eng_title or rom_title
                 else:
                     pref_title = rom_title or eng_title
-                return anime['idMal'], pref_title
+                return anime['idMal'], pref_title, year
     except Exception as e:
         pass
-    return None, None
+    return None, None, None
 
 def get_anizip_mappings(mal_id):
     """Fetch exact absolute -> season/episode mappings from AniZip."""
@@ -122,28 +127,31 @@ def resolve_anime_identity(path, title_language='english'):
         search_title = path.name
         
     mal_id, anime_title = search_local_db(search_title)
+    year = None
     if mal_id:
-        pref_title = get_anilist_title(mal_id, title_language)
+        pref_title, pref_year = get_anilist_title(mal_id, title_language)
         if pref_title:
             anime_title = pref_title
-        return mal_id, anime_title, is_season
+        year = pref_year
+        return mal_id, anime_title, is_season, year
         
-    mal_id, anime_title = search_anilist(search_title, title_language)
+    mal_id, anime_title, year = search_anilist(search_title, title_language)
     if mal_id:
-        return mal_id, anime_title, is_season
+        return mal_id, anime_title, is_season, year
         
     # If the season folder lookup fails, fallback to using the parent folder title
     if is_season:
         mal_id, anime_title = search_local_db(path.parent.name)
         if not mal_id:
-            mal_id, anime_title = search_anilist(path.parent.name, title_language)
+            mal_id, anime_title, year = search_anilist(path.parent.name, title_language)
         if mal_id:
-            pref_title = get_anilist_title(mal_id, title_language)
+            pref_title, pref_year = get_anilist_title(mal_id, title_language)
             if pref_title:
                 anime_title = pref_title
-            return mal_id, anime_title, is_season
+            year = pref_year if pref_year else year
+            return mal_id, anime_title, is_season, year
 
-    return None, None, is_season
+    return None, None, is_season, None
 
 def get_consolidated_episodes(primary_mal_id, anime_title, is_season):
     """
@@ -257,9 +265,16 @@ def process_directory(directory, dry_run=True):
         
     try:
         import xbmcaddon
-        title_language = (xbmcaddon.Addon('metadata.anime.otaku.python').getSetting('renamer_title_language') or 'english').lower()
+        addon = xbmcaddon.Addon('metadata.anime.otaku.python')
+        title_language = (addon.getSetting('renamer_title_language') or 'english').lower()
+        folder_format = addon.getSetting('renamer_folder_format') or 'Do not rename'
+        season_format = addon.getSetting('renamer_season_format') or 'Flat (No Season Folders)'
+        episode_format = addon.getSetting('renamer_episode_format') or 'Show Name S01E01 - Title'
     except ImportError:
         title_language = 'english'
+        folder_format = 'Do not rename'
+        season_format = 'Flat (No Season Folders)'
+        episode_format = 'Show Name S01E01 - Title'
 
     # Check if there are video files directly in this directory
     has_videos = any(f.suffix.lower() in ['.mkv', '.mp4', '.avi'] for f in path.iterdir() if f.is_file())
@@ -282,7 +297,7 @@ def process_directory(directory, dry_run=True):
                 process_directory(subdir, dry_run=dry_run)
             return
 
-    mal_id, anime_title, is_season = resolve_anime_identity(path, title_language)
+    mal_id, anime_title, is_season, year = resolve_anime_identity(path, title_language)
     if not mal_id:
         print(f"\n📂 Scanning Directory: {path.name}")
         print("  ❌ Could not identify anime. Skipping.")
@@ -334,33 +349,87 @@ def process_directory(directory, dry_run=True):
             episode = ep_data.get('episodeNumber', int(ep_num_str))
             ep_title = ep_data.get('title', {}).get('en', '')
             
-            clean_anime_title = re.sub(r'[\\/*?:"<>|]', "", anime_title)
+            clean_anime_title = re.sub(r'[\\/*?:"<>|]', "", anime_title).strip()
             # Remove Season suffix from base title if present to avoid duplicating it
-            clean_anime_title = re.sub(r'\s+Season\s+\d+', '', clean_anime_title, flags=re.IGNORECASE)
+            clean_anime_title = re.sub(r'\s+Season\s+\d+', '', clean_anime_title, flags=re.IGNORECASE).strip()
             
-            new_name = f"{clean_anime_title} S{season:02d}E{episode:02d}"
+            clean_ep_title = ""
             if ep_title:
-                clean_ep_title = re.sub(r'[\\/*?:"<>|]', "", ep_title)
-                new_name += f" - {clean_ep_title}"
+                clean_ep_title = re.sub(r'[\\/*?:"<>|]', "", ep_title).strip()
+                
+            # Apply file formatting
+            if episode_format == 'Show Name S01E01':
+                new_name = f"{clean_anime_title} S{season:02d}E{episode:02d}"
+            elif episode_format == 'S01E01 - Title':
+                if clean_ep_title:
+                    new_name = f"S{season:02d}E{episode:02d} - {clean_ep_title}"
+                else:
+                    new_name = f"S{season:02d}E{episode:02d}"
+            elif episode_format == 'S01E01':
+                new_name = f"S{season:02d}E{episode:02d}"
+            else: # Default: 'Show Name S01E01 - Title'
+                new_name = f"{clean_anime_title} S{season:02d}E{episode:02d}"
+                if clean_ep_title:
+                    new_name += f" - {clean_ep_title}"
                 
             new_name += file.suffix
-            new_path = file.with_name(new_name)
             
-            if file.name != new_name:
-                if new_path.exists():
-                    print(f"  ❌ ERROR: Target file {new_name} already exists! Skipping to prevent overwrite.")
+            # Apply season formatting (folder structures)
+            season_folder_name = ""
+            if season_format == 'Season 1':
+                season_folder_name = f"Season {season}"
+            elif season_format == 'Season 01':
+                season_folder_name = f"Season {season:02d}"
+                
+            if season_folder_name:
+                target_dir = path / season_folder_name
+            else:
+                target_dir = path
+                
+            new_path = target_dir / new_name
+            
+            if file.name != new_name or file.parent != new_path.parent:
+                if new_path.exists() and str(file.resolve()) != str(new_path.resolve()):
+                    print(f"  ❌ ERROR: Target file {new_path.name} already exists! Skipping to prevent overwrite.")
                 else:
                     renames.append((file, new_path))
                     
     for old_file, new_file in renames:
-        if dry_run:
-            print(f"  [TEST] {old_file.name} -> {new_file.name}")
-        else:
-            print(f"  [RENAME] {old_file.name} -> {new_file.name}")
+        action_text = "[TEST]" if dry_run else "[RENAME]"
+        parent_changed = str(new_file.parent.resolve()) != str(old_file.parent.resolve())
+        disp_name = f"{new_file.parent.name}/{new_file.name}" if parent_changed else new_file.name
+        
+        print(f"  {action_text} {old_file.name} -> {disp_name}")
+        
+        if not dry_run:
             try:
+                if not new_file.parent.exists():
+                    new_file.parent.mkdir(parents=True, exist_ok=True)
                 os.rename(old_file, new_file)
             except Exception as e:
                 print(f"  ❌ Failed to rename {old_file.name}: {e}")
+                
+    # Base Directory Renaming
+    if folder_format != 'Do not rename' and not is_season:
+        clean_anime_title = re.sub(r'[\\/*?:"<>|]', "", anime_title).strip()
+        new_folder_name = clean_anime_title
+        
+        if folder_format == 'Show Name (Year)' and year:
+            new_folder_name = f"{clean_anime_title} ({year})"
+            
+        new_folder_path = path.parent / new_folder_name
+        
+        if path.name != new_folder_name:
+            action_text = "[TEST]" if dry_run else "[RENAME DIR]"
+            print(f"  {action_text} Directory '{path.name}' -> '{new_folder_name}'")
+            if not dry_run:
+                try:
+                    if not new_folder_path.exists():
+                        os.rename(path, new_folder_path)
+                    else:
+                        print(f"  ❌ Failed to rename directory: '{new_folder_name}' already exists.")
+                except Exception as e:
+                    print(f"  ❌ Failed to rename directory {path.name}: {e}")
 
 if __name__ == '__main__':
     if len(sys.argv) < 2:
