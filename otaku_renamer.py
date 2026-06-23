@@ -271,12 +271,12 @@ def process_directory(directory, dry_run=True):
         addon = xbmcaddon.Addon('metadata.anime.otaku.python')
         title_language = (addon.getSetting('renamer_title_language') or 'english').lower()
         folder_format = addon.getSetting('renamer_folder_format') or 'Do not rename'
-        season_format = addon.getSetting('renamer_season_format') or 'Flat (No Season Folders)'
+        season_format = addon.getSetting('renamer_season_format') or 'Show Name - Season 01 (Year)'
         episode_format = addon.getSetting('renamer_episode_format') or 'Show Name S01E01 - Title'
     except ImportError:
         title_language = 'english'
         folder_format = 'Do not rename'
-        season_format = 'Flat (No Season Folders)'
+        season_format = 'Show Name - Season 01 (Year)'
         episode_format = 'Show Name S01E01 - Title'
 
     # Check if there are video files directly in this directory
