@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import sys
 import xbmcplugin
 import xbmcgui
 import urllib.parse
@@ -6,12 +7,22 @@ from .db_connector import translate_anime_id
 from .providers import anilist, tvdb
 from .utils import logger
 
-def router(action, args):
+def router(query_string, args):
     handle = int(args[1])
-    # Router routes to find_show, get_show_details, get_episode_list, get_episode_details
-    # as defined in the previous structural blueprint
+    
+    # Remove the leading '?' and parse the query string into a dictionary
+    if query_string.startswith('?'):
+        query_string = query_string[1:]
+    
+    params = urllib.parse.parse_qs(query_string)
+    
+    # Extract the 'action' parameter safely
+    action = params.get('action', [''])[0]
+    
     if action == 'find':
-        find_show(handle, urllib.parse.unquote_plus(args[3]))
+        # Extract the title from the parameters instead of args[3]
+        title = params.get('title', [''])[0]
+        find_show(handle, title)
     # ... (Add remaining action calls here)
 
 def find_show(handle, query):
@@ -22,4 +33,6 @@ def find_show(handle, query):
             li = xbmcgui.ListItem(anime['title'])
             url = f"tvdb_id={mapping['thetvdb_id']}&anilist_id={anime['id']}"
             xbmcplugin.addDirectoryItem(handle=handle, url=url, listitem=li, isFolder=True)
+            
+    # endOfDirectory must be called to tell Kodi we are done building the list
     xbmcplugin.endOfDirectory(handle)
