@@ -17,6 +17,9 @@ By adapting the clean architecture of Kodi's official `metadata.tvdb.com.python`
 * 🧩 **Perfect Multi-Season Mapping:** Automatically translates continuous absolute episode streams (e.g., *Episode 75*) into standard media player structures using explicit metadata matching tables (`thetvdb_season`, `thetvdb_part`).
 * 📡 **Hybrid Processing Engine:** Discovers trending streams via AniList's ultra-fast GraphQL infrastructure and falls back gracefully to secondary data pools matching user settings.
 * 🔄 **Asynchronous Database Syncing:** Runs non-blocking background file checking intervals to safely sync down up-to-date community mapping updates from the upstream master repository without causing visual UI stuttering.
+* 🌍 **Localization Flexibility:** Features independent language preference controls (`English` or `Romaji`) for both the Indexer (Kodi GUI) and the included directory Renamer tool.
+* 📦 **Settings Management:** Includes an advanced configuration dashboard featuring instant Backup and Restore capabilities for safe settings preservation.
+* 📝 **Custom Diagnostic Logging:** Features an advanced logging engine allowing you to define custom diagnostic log directories separate from the standard `kodi.log` for easy troubleshooting.
 * 🛠️ **Robust Exception Interception:** Features an isolated diagnostic execution ring (`debugger.py`) that captures raw application-level trace vectors, logging errors gracefully into the system storage layout.
 
 ---
@@ -35,3 +38,13 @@ The framework functions directly inside Kodi's native metadata extraction ring (
  [ Step 3: getepisodelist ]  --> Compiles the explicit SxxExx directory containing target episode keys.
         │
  [ Step 4: getepisodedetails]--> Resolves granular localized metadata descriptions per matching video node.
+
+---
+
+## 📅 Version History
+
+### v1.1.1 (2026-06-23)
+- **Settings Tabbed Interface**: Refactored settings to categorize options under Indexer, Renamer, Metadata, Fan Art, Accounts, Logging, and Advanced.
+- **English Title Default Fix**: Resolved a case-sensitive issue where default English language setting wasn't correctly resolved, reverting titles to Romaji.
+- **Dynamic Multi-Provider Ratings**: Added primary/secondary rating selectors with fallbacks (AniList, MAL, TMDb, Simkl) and multi-rating Kodi 20+ injection.
+- **Otaku Renamer Overhaul**: Fixed prefix filename collisions, supported recursive directories, matched split seasons, and added parent-folder mappings.

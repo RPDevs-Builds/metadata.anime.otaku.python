@@ -10,7 +10,7 @@ def search_anime(query):
       Page(page: 1, perPage: 10) {
         media(search: $search, type: ANIME) {
           id
-          title { romaji }
+          title { romaji english }
         }
       }
     }
@@ -25,7 +25,7 @@ def search_anime(query):
         )
         with urllib.request.urlopen(req, timeout=10) as response:
             data = json.loads(response.read().decode('utf-8'))
-            return [{'id': m['id'], 'title': m['title']['romaji']} 
+            return [{'id': m['id'], 'title': m['title']} 
                     for m in data.get('data', {}).get('Page', {}).get('media', [])]
     except Exception as e:
         logger(f"AniList Search Error: {e}", level="ERROR")
@@ -42,6 +42,7 @@ def get_anime_details(anilist_id):
         id
         title { romaji english native }
         description
+        averageScore
         genres
         studios(isMain: true) {
           nodes { name }
@@ -52,6 +53,19 @@ def get_anime_details(anilist_id):
           medium
         }
         bannerImage
+        trailer { id site }
+        characters(sort: ROLE, role: MAIN) {
+          edges {
+            role
+            node {
+              name { full }
+            }
+            voiceActors {
+              languageV2
+              name { full }
+            }
+          }
+        }
         startDate {
           year
           month
@@ -90,6 +104,35 @@ def get_anime_details(anilist_id):
             cover_image = media.get('coverImage', {})
             poster = cover_image.get('extraLarge') or cover_image.get('large') or cover_image.get('medium') or ''
             
+            trailer_id = ''
+            trailer_site = ''
+            if media.get('trailer'):
+                trailer_id = media['trailer'].get('id', '')
+                trailer_site = media['trailer'].get('site', '')
+                
+            characters = []
+            for edge in media.get('characters', {}).get('edges', []):
+                char_name = edge.get('node', {}).get('name', {}).get('full')
+                voice_actors = edge.get('voiceActors', [])
+                
+                added_va = False
+                for va in voice_actors:
+                    lang = va.get('languageV2')
+                    if lang in ['English', 'Japanese'] and va.get('name', {}).get('full'):
+                        actor_name = va['name']['full']
+                        characters.append({
+                            'name': actor_name,
+                            'role': f"{char_name} ({lang})"
+                        })
+                        added_va = True
+                
+                # Default to character name if no EN/JP voice actor found
+                if char_name and not added_va:
+                    characters.append({
+                        'name': char_name,
+                        'role': edge.get('role', 'MAIN')
+                    })
+            
             return {
                 'title': media.get('title', {}),
                 'description': media.get('description', ''),
@@ -98,7 +141,11 @@ def get_anime_details(anilist_id):
                 'poster': poster,
                 'banner': media.get('bannerImage') or '',
                 'year': year,
-                'premiered': premiered
+                'premiered': premiered,
+                'trailer_id': trailer_id,
+                'trailer_site': trailer_site,
+                'characters': characters,
+                'average_score': media.get('averageScore')
             }
     except Exception as e:
         logger(f"AniList Details Error: {e}", level="ERROR")

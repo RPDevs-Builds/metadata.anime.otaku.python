@@ -76,10 +76,30 @@ def fetch_all_metadata(mal_id, tvdb_id, title_eng=None):
             season = ep_data.get('seasonNumber', 1)
             episode = int(ep_num)
             
+            # Get preferred title language setting
+            val = str(ADDON.getSetting('indexer_title_language')).lower()
+            title_language = val if val else 'english'
+            
             # Use Jikan for plots if available, else AniZip
             jikan_ep = next((e for e in jikan_data if str(e.get('mal_id')) == ep_num), None)
             plot = jikan_ep.get('synopsis') if jikan_ep and jikan_ep.get('synopsis') else ep_data.get('overview', '')
-            title = jikan_ep.get('title') if jikan_ep and jikan_ep.get('title') else ep_data.get('title', {}).get('en', f'Episode {episode}')
+            
+            # AniZip title mapping ('en' = English, 'x-jat' = Romaji)
+            az_titles = ep_data.get('title', {})
+            az_eng = az_titles.get('en')
+            az_rom = az_titles.get('x-jat')
+            
+            jikan_title = jikan_ep.get('title') if jikan_ep else None
+            jikan_rom = jikan_ep.get('title_romanji') if jikan_ep else None
+            
+            eng_ep = az_eng or jikan_title
+            rom_ep = az_rom or jikan_rom or jikan_title
+            
+            if title_language == 'english':
+                title = eng_ep or rom_ep or f'Episode {episode}'
+            else:
+                title = rom_ep or eng_ep or f'Episode {episode}'
+                
             aired = jikan_ep.get('aired') if jikan_ep and jikan_ep.get('aired') else ep_data.get('airDate', '')
             
             # Check filler

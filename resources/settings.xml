@@ -1,60 +1,66 @@
-<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<settings version="1">
-    <section id="metadata.anime.otaku.python">
-        <category label="General">
-            <setting id="db_auto_update" type="boolean" label="Automatically update local mapping database">
-                <level>0</level>
-                <default>true</default>
-            </setting>
-            <setting id="db_update_interval" type="integer" label="Database check interval (days)">
-                <level>0</level>
-                <default>7</default>
-                <dependencies>
-                    <dependency setting="db_auto_update" expression="true"/>
-                </dependencies>
-            </setting>
-            <setting id="enable_filler" type="boolean" label="Enable Filler tagging (animefillerlist.com)">
-                <level>0</level>
-                <default>true</default>
-            </setting>
-        </category>
-        <category label="Providers">
-            <setting id="provider_anizip" type="boolean" label="Enable AniZip (Preferred for TVDB Mappings)">
-                <level>0</level>
-                <default>true</default>
-            </setting>
-            <setting id="provider_jikan" type="boolean" label="Enable Jikan (MyAnimeList)">
-                <level>0</level>
-                <default>true</default>
-            </setting>
-            <setting id="provider_kitsu" type="boolean" label="Enable Kitsu">
-                <level>0</level>
-                <default>true</default>
-            </setting>
-            <setting id="provider_simkl" type="boolean" label="Enable Simkl">
-                <level>0</level>
-                <default>true</default>
-            </setting>
-            <setting id="provider_tvdb" type="boolean" label="Enable TVDB (Fallback)">
-                <level>0</level>
-                <default>true</default>
-            </setting>
-        </category>
-        <category label="API Keys">
-            <setting id="simkl_api_key" type="string" label="Simkl Client ID (Replace if empty/failing)">
-                <level>1</level>
-                <default>4d63b27b3fa6972e7370ce15119dc9469e71ecfc647037f3747fccb2ef10f92d</default>
-                <dependencies>
-                    <dependency setting="provider_simkl" expression="true"/>
-                </dependencies>
-            </setting>
-            <setting id="tvdb_api_key" type="string" label="TVDB API Key (Replace if empty/failing)">
-                <level>1</level>
-                <default>a832f059-e9eb-4a1b-bd5b-56af7b5ce1bf</default>
-                <dependencies>
-                    <dependency setting="provider_tvdb" expression="true"/>
-                </dependencies>
-            </setting>
-        </category>
-    </section>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<settings>
+    <category label="Indexer">
+        <setting type="lsep" label="General Preferences" />
+        <setting id="indexer_title_language" type="labelenum" label="Preferred Title Language" values="English|Romaji" default="English" />
+        <setting id="enable_filler" type="bool" label="Enable Filler tagging (animefillerlist.com)" default="true" />
+
+        <setting type="lsep" label="Database Cache" />
+        <setting id="db_auto_update" type="bool" label="Automatically update local mapping database" default="true" />
+        <setting id="db_update_interval" type="number" label="Database check interval (days)" default="7" enable="eq(-1,true)" />
+
+        <setting type="lsep" label="Providers" />
+        <setting id="provider_anizip" type="bool" label="Enable AniZip (Preferred for TVDB Mappings)" default="true" />
+        <setting id="provider_jikan" type="bool" label="Enable Jikan (MyAnimeList)" default="true" />
+        <setting id="provider_kitsu" type="bool" label="Enable Kitsu" default="true" />
+        <setting id="provider_simkl" type="bool" label="Enable Simkl" default="true" />
+        <setting id="provider_tvdb" type="bool" label="Enable TVDB (Fallback)" default="true" />
+    </category>
+
+    <category label="Renamer">
+        <setting id="renamer_title_language" type="labelenum" label="Preferred Title Language" values="English|Romaji" default="English" />
+    </category>
+
+    <category label="Metadata">
+        <setting type="lsep" label="Ratings Configuration" />
+        <setting id="rating_source" type="labelenum" label="Primary Rating Source" values="AniList|MyAnimeList|TMDb|Simkl" default="AniList" />
+        <setting id="enable_anilist_rating" type="bool" label="Show AniList Rating" default="true" />
+        <setting id="enable_mal_rating" type="bool" label="Show MyAnimeList (MAL) Rating" default="true" />
+        <setting id="enable_tmdb_rating" type="bool" label="Show TMDb Rating" default="true" />
+        <setting id="enable_simkl_rating" type="bool" label="Show Simkl Rating" default="true" />
+
+        <setting type="lsep" label="Preferred Content Sources" />
+        <setting id="plot_source" type="labelenum" label="Preferred Plot Source" values="AniList|TMDb" default="AniList" />
+        <setting id="release_date_source" type="labelenum" label="Preferred Release Date Source" values="AniList|TMDb" default="AniList" />
+
+        <setting type="lsep" label="Extended Details" />
+        <setting id="fetch_trailers" type="bool" label="Fetch Trailers (YouTube)" default="true" />
+        <setting id="fetch_cast" type="bool" label="Fetch Cast (Main Characters)" default="true" />
+    </category>
+
+    <category label="Fan Art">
+        <setting id="enable_posters" type="bool" label="Enable Posters" default="true" />
+        <setting id="enable_banners" type="bool" label="Enable Banners" default="true" />
+        <setting id="enable_fanart" type="bool" label="Enable Fanart (Backgrounds)" default="true" />
+    </category>
+
+    <category label="Accounts">
+        <setting id="simkl_api_key" type="text" label="Simkl Client ID (Get at https://simkl.com/apps)" default="4d63b27b3fa6972e7370ce15119dc9469e71ecfc647037f3747fccb2ef10f92d" />
+        <setting id="tvdb_api_key" type="text" label="TVDB API Key (Get at https://thetvdb.com/api-information)" default="a832f059-e9eb-4a1b-bd5b-56af7b5ce1bf" />
+        <setting id="tmdb_api_key" type="text" label="TMDb API Key (Get at https://www.themoviedb.org/settings/api)" default="af3a53eb387d57fc935e9128468b1899" />
+    </category>
+
+    <category label="Logging">
+        <setting id="debug_level" type="labelenum" label="Log Level" values="ERROR|WARNING|INFO|DEBUG" default="INFO" />
+        <setting id="custom_log_path" type="folder" label="Custom Log Directory (Optional)" default="" />
+    </category>
+
+    <category label="Advanced">
+        <setting type="lsep" label="Configuration Management" />
+        <setting id="backup_settings" type="action" label="Backup Addon Settings" action="RunScript(metadata.anime.otaku.python, ?action=backup_settings)" />
+        <setting id="restore_settings" type="action" label="Restore Addon Settings" action="RunScript(metadata.anime.otaku.python, ?action=restore_settings)" />
+
+        <setting type="lsep" label="Experimental" />
+        <setting id="experimental_fast_match" type="bool" label="Enable Fast Matching (Experimental)" default="false" />
+    </category>
 </settings>

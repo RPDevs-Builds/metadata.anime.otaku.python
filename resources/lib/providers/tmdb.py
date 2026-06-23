@@ -36,6 +36,8 @@ def get_series_data(tmdb_id):
                 'overview': data.get('overview', ''),
                 'genre': genres,
                 'siteRating': data.get('vote_average', 0.0),
+                'votes': data.get('vote_count', 0),
+                'first_air_date': data.get('first_air_date', ''),
                 'poster': f"https://image.tmdb.org/t/p/w500{poster_path}" if poster_path else '',
                 'fanart': f"https://image.tmdb.org/t/p/original{backdrop_path}" if backdrop_path else ''
             }

@@ -2,6 +2,50 @@
 
 All notable changes to `metadata.anime.otaku.python` will be documented in this file.
 
+## [1.1.1] - 2026-06-23
+
+### Added
+- **Tabbed Settings Configuration (`settings.xml`):** Completely refactored the settings dialog into semantic categories: Indexer, Renamer, Metadata, Fan Art, Accounts, Logging, and Advanced.
+- **Granular Multi-Source Ratings Engine (`actions.py`):** Added support for selecting primary rating sources (AniList, MyAnimeList, TMDb, Simkl) with a fallback lookup chain. Integrated multi-rating injection using Kodi 20's `VideoInfoTag.setRating()` interface.
+- **Enhanced Plot & Air Date Selection:** Toggles to configure preferred providers (`plot_source` and `release_date_source`) between AniList, TMDb, and TVDB.
+- **Extended Fan Art & Metadata Controls:** Added user toggles for posters, banners, fanart, trailers, and cast.
+- **Otaku Renamer Enhancements (`otaku_renamer.py`):** Added recursive subdirectory scanning, parent folder context resolution for nested season folders, absolute-to-season continuation mapping for split seasons, and prefix-collision stripping.
+
+### Fixed
+- **English Title Default Fallback:** Fixed a bug where case-insensitive lookup check failed to match `"English"` (default addon setting) with `'english'` inside the code, causing Romaji titles to display by default.
+
+---
+
+## [1.1.0] - 2026-06-25
+
+### Added
+- **Batch Context Menu Processing:** Context menu renamer now robustly detects and processes both single show directories and entire parent library directories containing multiple shows.
+- **Kodi Progress Bar Feedback:** Shows active folder scanning and mapping progress in the Kodi UI dialog.
+
+## [1.0.9] - 2026-06-25
+
+### Fixed
+- Addressed strict Kodi ZIP archive validation bug (`itemsize: 11, first item is folder: false`) by compiling with Python `zipfile`.
+
+---
+## [1.0.8] - 2026-06-25
+
+### Added
+- **Kodi Context Menu Integration (`kodi.context.item`):** Added right-click support to rename Anime directories directly from the Kodi UI.
+
+### Fixed
+- **Renamer Safety:** Rewrote `otaku_renamer.py` regex safety protocols to prevent accidental file overwrites during batch operations.
+
+---
+
+## [1.0.7] - 2026-06-23
+
+### Added
+- **NFO Parsing (`nfo.py`):** Added support for parsing local `tvshow.nfo` files to automatically map explicitly specified AniList or MyAnimeList ID tags, allowing users to bypass the search index and force exact matches.
+
+### Fixed
+- **Episode Scanning (0 Episodes Added Bug):** Restored the backwards-compatible `liz.setInfo('video', details)` metadata payload to `get_episode_details`. This fixes a critical edge-case bug where the Kodi 19/20 `VideoInfoScanner` silently dropped successfully fetched episodes because the modern `VideoInfoTag` component lacked sufficient legacy metadata binding.
+
 ---
 
 ## [1.0.6] - 2026-06-23
