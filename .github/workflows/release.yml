@@ -30,8 +30,8 @@ jobs:
       - name: Extract Metadata
         id: extract_meta
         run: |
-          VERSION=$(grep -oP '(?<=version=")[^"]*' addon.xml | head -n 1)
-          ADDON_ID=$(grep -oP '(?<=id=")[^"]*' addon.xml | head -n 1)
+          VERSION=$(grep -oP '<addon[^>]*version="\K[^"]*' addon.xml | head -n 1)
+          ADDON_ID=$(grep -oP '<addon[^>]*id="\K[^"]*' addon.xml | head -n 1)
 
           if [ -z "$VERSION" ] || [ -z "$ADDON_ID" ]; then
             echo "Error: Failed to parse ADDON_ID or VERSION from addon.xml"
