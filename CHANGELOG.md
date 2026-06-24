@@ -2,6 +2,14 @@
 
 All notable changes to `metadata.anime.otaku.python` will be documented in this file.
 
+## [1.2.2] - 2026-06-23
+
+### Changed
+- **License**: Switched the repository license to GPLv3.
+- **Credits**: Added formal acknowledgement and credits for Goldenfreddy0703's code contributions and anime database.
+
+---
+
 ## [1.2.1] - 2026-06-23
 
 ### Added

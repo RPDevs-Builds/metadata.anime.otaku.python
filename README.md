@@ -27,6 +27,12 @@ By adapting the clean architecture of Kodi's official `metadata.tvdb.com.python`
 
 ---
 
+## 🙏 Acknowledgements
+
+* **Goldenfreddy0703**: Massive thanks for his code contributions and the foundational anime database mappings that power this scraper.
+
+---
+
 ## 🏗️ Architecture
 
 The framework functions directly inside Kodi's native metadata extraction rings (`xbmc.metadata.scraper.tvshows` and `xbmc.metadata.scraper.movies`) across four decoupled lifecycle hooks:
@@ -46,6 +52,9 @@ The framework functions directly inside Kodi's native metadata extraction rings 
 ---
 
 ## 📅 Version History
+
+### v1.2.2 (2026-06-23)
+- **License & Credits**: Switched to GPLv3 license and added credits for Goldenfreddy0703's DB and code contributions.
 
 ### v1.2.1 (2026-06-23)
 - **Advanced Renamer Options**: Added comprehensive folder, season, and episode formatting templates to the Otaku Renamer, supporting dynamically injected AniList `seasonYear` mappings and Kodi-standard `Show Name - Season 01 (Year)` structure parsing.
